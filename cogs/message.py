@@ -47,9 +47,11 @@ class CogMessage(Cog):
 
         await self.bot.wait_until_ready()
 
-        try:
-            c = config[before.author.id]["channel"]
-        except KeyError:
+        config = read_config()
+
+        c = config[before.guild.id]["channel"]
+
+        if c is None:
             c = before.channel.id
 
         embed = Embed(
