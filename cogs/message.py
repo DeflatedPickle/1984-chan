@@ -5,18 +5,22 @@ from discord.ext.commands import Cog
 
 
 # noinspection PyUnusedLocal
+from config import read_config
+
+
 class CogMessage(Cog):
-    def __init__(self, bot, config):
+    def __init__(self, bot):
         self.bot = bot
-        self.config = config
 
     @Cog.listener()
     async def on_message_delete(self, message: Message):
         await self.bot.wait_until_ready()
 
-        try:
-            c = self.config[message.guild.id]["channel"]
-        except KeyError:
+        config = read_config()
+
+        c = config[message.guild.id]["channel"]
+
+        if c is None:
             c = message.channel.id
 
         embed = Embed(
@@ -31,7 +35,9 @@ class CogMessage(Cog):
             text="(deleted)"
         )
 
+        print(c)
         channel = self.bot.get_channel(c)
+        print(channel)
         await channel.send(embed=embed)
 
     # we're using the raw one as the message could be too old to be in the cache
@@ -42,7 +48,7 @@ class CogMessage(Cog):
         await self.bot.wait_until_ready()
 
         try:
-            c = self.config[before.author.id]["channel"]
+            c = config[before.author.id]["channel"]
         except KeyError:
             c = before.channel.id
 

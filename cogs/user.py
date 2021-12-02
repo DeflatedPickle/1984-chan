@@ -4,9 +4,8 @@ from discord.ext.commands import Cog
 
 # noinspection PyUnusedLocal
 class CogUser(Cog):
-    def __init__(self, bot, config):
+    def __init__(self, bot):
         self.bot = bot
-        self.config = config
 
     @Cog.listener()
     async def on_user_update(self, before: User, after: User):
