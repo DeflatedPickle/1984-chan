@@ -1,30 +1,57 @@
 from datetime import datetime
 
-from discord import Message, Embed
+from discord import Message, Embed, Colour
 from discord.ext.commands import Cog
+from better_profanity import profanity
 
-
-# noinspection PyUnusedLocal
 from config import read_config
 
 
+# noinspection PyUnusedLocal
 class CogMessage(Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @Cog.listener()
-    async def on_message_delete(self, message: Message):
+    async def on_message(self, message: Message):
+        if message.author.bot: return
         await self.bot.wait_until_ready()
 
         config = read_config()
+        censor = config[message.guild.id]["censor"]
 
-        c = config[message.guild.id]["channel"]
-
-        if c is None:
-            c = message.channel.id
+        if not censor or not profanity.contains_profanity(message.content): return
 
         embed = Embed(
-            description=message.content,
+            description=profanity.censor(message.content, censor_char="!"),
+            colour=Colour.purple(),
+            timestamp=datetime.now(),
+        ) \
+            .set_author(
+            name=message.author.name,
+            icon_url=message.author.avatar_url,
+        ) \
+            .set_footer(
+            text="(censored)"
+        )
+
+        await message.delete()
+        channel = self.bot.get_channel(message.channel.id)
+        await channel.send(embed=embed)
+
+    @Cog.listener()
+    async def on_message_delete(self, message: Message):
+        if message.author.bot: return
+        await self.bot.wait_until_ready()
+
+        config = read_config()
+        c = config[message.guild.id]["channel"] or message.channel.id
+        censor = config[message.guild.id]["censor"]
+
+        embed = Embed(
+            title=f"#{message.channel.name}",
+            description=message.content if not censor else profanity.censor(message.content, censor_char="!"),
+            colour=Colour.red(),
             timestamp=datetime.now(),
         ) \
             .set_author(
@@ -35,9 +62,7 @@ class CogMessage(Cog):
             text="(deleted)"
         )
 
-        print(c)
         channel = self.bot.get_channel(c)
-        print(channel)
         await channel.send(embed=embed)
 
     # we're using the raw one as the message could be too old to be in the cache
@@ -49,12 +74,12 @@ class CogMessage(Cog):
 
         config = read_config()
 
-        c = config[before.guild.id]["channel"]
-
-        if c is None:
-            c = before.channel.id
+        c = config[before.guild.id]["channel"] or before.channel.id
+        censor = config[before.guild.id]["censor"]
 
         embed = Embed(
+            title=f"#{before.channel.name}",
+            colour=Colour.orange(),
             timestamp=datetime.now(),
         ) \
             .set_author(
@@ -66,12 +91,12 @@ class CogMessage(Cog):
         ) \
             .add_field(
             name="before",
-            value=before.content,
+            value=before.content if not censor else profanity.censor(before.content, censor_char="!"),
             inline=False,
         ) \
             .add_field(
             name="after",
-            value=after.content,
+            value=before.content if not censor else profanity.censor(after.content, censor_char="!"),
             inline=False,
         )
 

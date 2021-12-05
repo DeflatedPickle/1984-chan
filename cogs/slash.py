@@ -2,8 +2,8 @@ import discord
 from discord.abc import GuildChannel
 from discord.ext.commands import Cog
 from discord_slash import SlashContext, SlashCommandOptionType
-from discord_slash.cog_ext import cog_subcommand
-from discord_slash.utils.manage_commands import create_option
+from discord_slash.cog_ext import cog_subcommand, cog_slash
+from discord_slash.utils.manage_commands import create_option, create_choice
 
 from config import read_config, write_config
 
@@ -20,15 +20,11 @@ class CogSlash(Cog):
         options=[
             create_option(
                 name="channel",
-                description="The id of the channel to use",
+                description="The channel to send messages to",
                 option_type=SlashCommandOptionType.CHANNEL,
                 required=True,
             )
         ],
-        # base_permissions={k: [
-        #     create_permission(k, SlashCommandPermissionType.ROLE, False),
-        #     create_permission(bot.get_guild(k).owner_id, SlashCommandPermissionType.USER, True),
-        # ] for k in read_config()},
         guild_ids=read_config(),
     )
     async def _channel(self, ctx: SlashContext, channel: GuildChannel):
@@ -43,3 +39,23 @@ class CogSlash(Cog):
         write_config(config)
 
         await ctx.send(f"Channel set to {self.bot.get_channel(id).name}")
+
+    @cog_slash(
+        name="censor",
+        description="Toggles censoring on reposted messages",
+        guild_ids=read_config(),
+    )
+    async def _censor(self, ctx: SlashContext):
+        if ctx.author.id != self.bot.get_guild(ctx.guild_id).owner_id: return
+        await self.bot.wait_until_ready()
+
+        config = read_config()
+
+        config[ctx.guild_id]["censor"] = not config[ctx.guild_id]["censor"]
+
+        write_config(config)
+
+        if config[ctx.guild_id]["censor"]:
+            await ctx.send("Censoring all messages")
+        else:
+            await ctx.send("Fine. Swear")

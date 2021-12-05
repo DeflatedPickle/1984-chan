@@ -1,3 +1,4 @@
+from better_profanity import profanity
 from discord import Intents, Activity, ActivityType
 from discord.ext.commands import Bot
 from discord_slash import SlashCommand
@@ -30,6 +31,7 @@ async def on_ready():
         if i.id not in config:
             config[i.id] = {
                 "channel": None,
+                "censor": False,
             }
 
     write_config(config)
@@ -38,15 +40,12 @@ async def on_ready():
 
 
 if __name__ == "__main__":
-    from cogs.guild import CogGuild
     from cogs.message import CogMessage
     from cogs.slash import CogSlash
-    from cogs.user import CogUser
+
+    profanity.load_censor_words()
 
     bot.add_cog(CogMessage(bot))
-    bot.add_cog(CogGuild(bot))
-    bot.add_cog(CogUser(bot))
-
     bot.add_cog(CogSlash(bot))
 
     bot.run(read_id())
