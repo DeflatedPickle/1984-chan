@@ -3,6 +3,7 @@ from discord import Intents, Activity, ActivityType
 from discord.ext.commands import Bot
 from discord_slash import SlashCommand
 
+from cogs.smartass import CogSmartAss
 from config import read_config, write_config, read_id
 
 intents = Intents.default()
@@ -47,5 +48,6 @@ if __name__ == "__main__":
 
     bot.add_cog(CogMessage(bot))
     bot.add_cog(CogSlash(bot))
+    bot.add_cog(CogSmartAss(bot))
 
     bot.run(read_id())

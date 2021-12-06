@@ -3,7 +3,7 @@ from discord.abc import GuildChannel
 from discord.ext.commands import Cog
 from discord_slash import SlashContext, SlashCommandOptionType
 from discord_slash.cog_ext import cog_subcommand, cog_slash
-from discord_slash.utils.manage_commands import create_option, create_choice
+from discord_slash.utils.manage_commands import create_option
 
 from config import read_config, write_config
 
@@ -27,7 +27,7 @@ class CogSlash(Cog):
         ],
         guild_ids=read_config(),
     )
-    async def _channel(self, ctx: SlashContext, channel: GuildChannel):
+    async def _channel_set(self, ctx: SlashContext, channel: GuildChannel):
         if ctx.author.id != self.bot.get_guild(ctx.guild_id).owner_id: return
         await self.bot.wait_until_ready()
 
@@ -38,7 +38,25 @@ class CogSlash(Cog):
 
         write_config(config)
 
-        await ctx.send(f"Channel set to {self.bot.get_channel(id).name}")
+        await ctx.send(f"Channel set to #{self.bot.get_channel(id).name}")
+
+    @cog_subcommand(
+        base="channel",
+        name="unset",
+        description="Sets the bot to post messages in the same channel as they were originally",
+        guild_ids=read_config(),
+    )
+    async def _channel_unset(self, ctx: SlashContext):
+        if ctx.author.id != self.bot.get_guild(ctx.guild_id).owner_id: return
+        await self.bot.wait_until_ready()
+
+        config = read_config()
+
+        config[ctx.guild_id]["channel"] = None
+
+        write_config(config)
+
+        await ctx.send(f"Reverted channel to be decided per-message")
 
     @cog_slash(
         name="censor",

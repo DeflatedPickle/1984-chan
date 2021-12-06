@@ -45,8 +45,11 @@ class CogMessage(Cog):
         await self.bot.wait_until_ready()
 
         config = read_config()
+
         c = config[message.guild.id]["channel"] or message.channel.id
         censor = config[message.guild.id]["censor"]
+
+        if censor and profanity.contains_profanity(message.content): return
 
         embed = Embed(
             title=f"#{message.channel.name}",

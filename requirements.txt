@@ -1,0 +1,4 @@
+discord~=1.7.3
+discord-py-interactions~=3.0.2
+simplejson~=3.17.2
+better_profanity~=0.7.0
